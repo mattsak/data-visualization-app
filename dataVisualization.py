@@ -12,12 +12,14 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 # Reads a text file, returns a data frame
+# Reads in .txt file, delimiter is a comma, no header or footer, can acccept up to 10 columns of data per row,
+# rows with less than 10 columns are filled with NULL values
 def dataImport(textfile):
     df = pd.read_csv(textfile, sep=",", header=None, names=list(range(10)), engine="python")
     return df
 
 def main():
-    # ask for type of input
+    # ask for type of input, a packet of multiple lines of data or a single line of data
     choice = input("Would you like to plot decoded packets or data? (packets/data): ")
 
     # Packet input
@@ -27,7 +29,7 @@ def main():
             print("Folder \"decodedpackets\" not found.")
             return
 
-        # Create blank dataframes
+        # Create blank a dataframe for each sensor type
         GPS_Data = pd.DataFrame() 
         RMC_Data = pd.DataFrame()
         ACC_Data = pd.DataFrame()
@@ -36,11 +38,14 @@ def main():
         PRES_Data = pd.DataFrame()
         Spectrometer_Data = pd.DataFrame() # unused for now
 
-        # Take input for number of packets to be graphed
+        
         fileCount = 0
         files = Path("decodedpackets").glob('*')
         for file in files:
             fileCount += 1
+            
+        # Take input for number of packets to be graphed
+        # Deny input that wants less than 1 packet or more packets that exist in the folder
         graphCount = input("How many packets should be graphed? (There are " + str(fileCount) + " total packets): ")
         try:
             graphCount = int(graphCount)
@@ -57,11 +62,18 @@ def main():
             x = str(file)
             x = x.strip("decodedpackets/\.txt")
             x = int(x)
-    
+            # if file is within range of files wanted by the user
             if (x < graphCount):
                 print("Adding " + str(file) + " to the graph.")
+                
+                #call data import function
                 data = dataImport(file)
-
+                
+                
+                # Column 0 represents the censor type
+                # Separate all data from each sensor type into its own data frame
+                # Remove any NULL columns
+                # Concatenate new data of a speficic sensor to its corresponding existing data frame
                 new_GPS_Data = data[data[0] == 1].drop([0, 2, 3, 4, 5, 8, 9], axis=1) 
                 GPS_Data = pd.concat([GPS_Data, new_GPS_Data])
 
